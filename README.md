@@ -1,7 +1,4 @@
 # cds
-The cds ("change directory savor") command is used to change the current working directory by using the DIRECTORY ALIAS when working on the Linux terminal in Linux and other Unix-like operating systems and even Windows implemented by the pure Shell.
-
-# Descriptions
 The cds (\"change directory savor\") command is used to change 
 the current working directory by using the DIRECTORY ALIAS
 when working on the Linux terminal in Linux and other Unix-like
