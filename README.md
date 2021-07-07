@@ -15,11 +15,11 @@ used directories. Aliases are like custom shortcuts used to represent a director
 The default config file is ${HOME}/.cds.cnfg.
 Use 'export CDS_CNFG=your_cnfg' to overwrite the default.
 
-Must add this line in your .profile or .bash_profile:
-alias cds=\". your_local_cds_tool_path/cds\"
+Must add this line in your .profile or .bash_profile:  
+`alias cds=\". your_local_cds_tool_path/cds\"`
 
-If you use Cygwin or Windows Ubuntu, set the Linux mount base in profile file:
-export CDS_LINUX_MOUNT=/mnt
+If you use Cygwin or Windows Ubuntu, set the Linux mount base in profile file:  
+`export CDS_LINUX_MOUNT=/mnt`
 So, \"C:\Program Files (x86)\" will be converted to \"/mnt/c/Program Files (x86)\".# 
 
 # General usage
