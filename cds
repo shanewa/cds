@@ -10,7 +10,7 @@
 #---------------------------------------------------------------------------
 
 # Use 'export CDS_CNFG=your_cnfg' to overwrite the default.
-[[ -z ${CDS_CNFG} ]] && CDS_CNFG=${HOME}/.cds.cnfg.test
+[[ -z ${CDS_CNFG} ]] && CDS_CNFG=${HOME}/.cds.cnfg
 
 if [[ "${cds_init_flag}" != "yes" ]]; then {
 
@@ -118,12 +118,12 @@ function cds_load_cnfg() {
     typeset cds_tmp_value
     typeset cds_tmp_line
     if [[ "${cds_init_flag}" != "yes" ]]; then {
-        while read cds_tmp_line; do {
+        for cds_tmp_line in $(cat ${CDS_CNFG} 2>/dev/null); do {
             cds_tmp_key=$(echo ${cds_tmp_line} | cut -d: -f1)
             cds_tmp_value=$(echo ${cds_tmp_line} | cut -d: -f2)
             cds_configurations["${cds_tmp_key}"]="${cds_tmp_value}"
         }
-        done <<< $(cat ${CDS_CNFG} 2>/dev/null)
+        done 
         cds_init_flag="yes"
     }
     fi
