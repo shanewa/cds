@@ -86,13 +86,13 @@ CONFIGURATIONS:
 
 EXAMPLES:
     cds
-        -  cd \${ROOT}
+        -  cd \${ROOT} by default.
 
     cds --help, cds -h
-        - Print the help message
+        - Print the help message.
 
     cds -3
-        -  e.g. ls => file1, folder2, folder3. Then, it means 'cd folder3'
+        -  e.g. ls => file1, folder2, folder3. Then, it means 'cd folder3'.
 
     cds -g
         - e.g. ./folder1/folder2/foler3/. Then it means 'cd ./folder1/folder2/foler3/'.
@@ -104,14 +104,20 @@ EXAMPLES:
         - Add a new alias 'test2' for /home/my/test/.
     
     cds -d test2
-        - Remove alias 'test2'
+        - Remove alias 'test2'.
     
     cds -s
         - Show exsiting alaises.
     
     cds -w \"C:\Program Files (x86)\"
-        - cd \"/mnt/c/Program Files (x86)\"
+        - cd \"/mnt/c/Program Files (x86)\".
 "
+
+if [[ -z ${CDS_LS} ]]; then {
+   CDS_LS=$(alias ls 2>/dev/null | cut -d"'" -f2 | cut -d" " -f1)
+   [[ -z ${CDS_LS} ]] && CDS_LS=ls
+}
+fi
 
 function cds_load_cnfg() {
     typeset cds_tmp_key
@@ -167,7 +173,11 @@ function cds_cd_alias() {
     typeset myalias="$1"
     typeset mypath="${cds_configurations[${myalias}]}"
     if [[ ! -z ${mypath} ]]; then {
-        [[ "${mypath}" == "\${ROOT}"* ]] && mypath="${ROOT}$(gawk -F"\${ROOT}" '{print $2}')"
+        if [[ "${mypath}" == "\${ROOT}"* ]]; then {
+            typeset relative_path=$(echo "${mypath}" | gawk '{gsub(/\${ROOT}/, ""); print $0}')
+            mypath="$(cd ${ROOT} && pwd)${relative_path}"
+        }
+        fi
         cd "${mypath}"
     }
     fi
@@ -177,7 +187,7 @@ function cds_go() {
     typeset cds_d_num=1
     typeset cds_d_name=""
     while [[ ${cds_d_num} -eq 1 ]]; do { 
-        eval $(ls -l | gawk '{
+        eval $(${CDS_LS} -l | gawk '{
                 if ($0 ~ /^d/) {
                     cds_d_num++
                     cds_d_name=$NF
@@ -188,7 +198,7 @@ function cds_go() {
         [[ ${cds_d_num} -eq 1 ]] && cd "${cds_d_name}"
     }
     done
-    pwd && ls
+    pwd && ${CDS_LS}
 }
 
 function cds_path_windowns_2_linux() {
@@ -246,10 +256,10 @@ while [[ $# -gt 0 ]]; do {
             cds_go
         ;;
         -l|--last)
-            cd "$(ls | sed -n '$p')"
+            cd "$(${CDS_LS} | sed -n '$p')"
         ;;
         -f|--first)
-            cd "$(ls | head -1)"
+            cd "$(${CDS_LS} | head -1)"
         ;;
         -d|--delete)
             [[ $# -gt 0 ]] && shift
@@ -270,7 +280,7 @@ while [[ $# -gt 0 ]]; do {
         ;;
         # Change dir to the <n>th folder.
         -[1-9]*)
-            [[ "$1" =~ ^-[1-9][0-9]*$ ]] && cd "$(ls | sed -n "$(echo ${1} | cut -d- -f2)p")"
+            [[ "$1" =~ ^-[1-9][0-9]*$ ]] && cd "$(${CDS_LS} | sed -n "$(echo ${1} | cut -d- -f2)p")"
         ;;
         # Change dir to alias
         *)
