@@ -33,13 +33,27 @@ Deep paths get typed once and then forgotten. `cds` stores them as names, jumps 
 
 `cds` is typed with the left hand alone. On a QWERTY keyboard, `c`, `d`, and `s` sit close together on the left side, and `d` and `s` are on the home row. Your fingers barely leave their resting position, so the command goes out fast, one-handed, and without a reach. Each keystroke is a short, comfortable move.
 
-## Drop in
+## Install
 
-Source it. Do not execute it. `cd` has to happen in the shell you are already using.
+Works with bash 3.2+ or zsh on Linux, WSL2, Cygwin, Git Bash, and macOS.
 
 ```bash
-# ~/.bashrc on Linux, WSL2, Cygwin, and Git Bash
-# ~/.zshrc on macOS
+curl -fsSL https://raw.githubusercontent.com/shanewa/cds/main/install.sh | sh
+```
+
+Prefer to read the script before running it:
+
+```bash
+curl -fsSL -o install.sh https://raw.githubusercontent.com/shanewa/cds/main/install.sh
+less install.sh
+sh install.sh
+```
+
+The installer saves `cds` to `~/.local/share/cds/cds` and adds one `alias cds=...` line to `~/.bashrc`, `~/.bash_profile` (macOS bash), or `~/.zshrc`. Run it again to update `cds`. The alias is not added twice.
+
+Installing from a clone instead? Source the script yourself. `cd` has to happen in the shell you are already using, so never execute it.
+
+```bash
 alias cds=". /path/to/cds/src/cds"
 ```
 
