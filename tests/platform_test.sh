@@ -3,7 +3,7 @@
 set -u
 
 root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
-cds_file="$root/cds"
+cds_file="$root/src/cds"
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 

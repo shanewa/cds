@@ -26,7 +26,7 @@ Use 'export CDS_CNFG=your_cnfg' to overwrite the default.
 
 Source cds from the shell startup file (`.bashrc` on Linux, WSL2, Cygwin, and Git Bash; `.zshrc` on macOS):
 
-`alias cds=". your_local_cds_tool_path/cds"`
+`alias cds=". your_local_cds_tool_path/src/cds"`
 
 `cds -w` converts a Windows path with `wslpath` (WSL2), `cygpath` (Cygwin, MSYS2, Git Bash), or a mount prefix:
 
