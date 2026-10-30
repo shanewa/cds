@@ -1,20 +1,32 @@
-<p>
-  <img src="https://img.shields.io/github/stars/shanewa/cds?style=flat-square&color=14b8a6" alt="GitHub stars" />
-  <img src="https://img.shields.io/github/last-commit/shanewa/cds?style=flat-square&color=0ea5e9" alt="Last commit" />
-  <img src="https://img.shields.io/github/license/shanewa/cds?style=flat-square&color=2dd4bf" alt="MIT license" />
-  <img src="https://img.shields.io/badge/shell-bash%20%7C%20zsh-0f172a?style=flat-square" alt="bash or zsh" />
-</p>
-
 <div align="center">
+  <h1>cds</h1>
 
-<img src="assets/cds-logo.png" alt="cds" width="420">
+  <p align="center">
+    <img src="assets/cds-logo.png" alt="cds" width="200"><br>
+    <i>Change directory. Savor the shortcut.</i>
+    <br>
+  </p>
 
-# cds
+  <p align="center">
+    <a href="src/cds">Source</a>
+    ·
+    <a href="https://github.com/shanewa/cds/issues">Submit an Issue</a>
+    ·
+    <a href="LICENSE">MIT License</a>
+    <br>
+    <br>
+  </p>
 
-**Change directory. Savor the shortcut.**
-
-One alias for the folders you open every day. Pure shell. No daemon.
-
+  <p align="center">
+    <a href="https://github.com/shanewa/cds/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/shanewa/cds?style=flat-square&color=14b8a6" /></a>&nbsp;
+    <a href="https://github.com/shanewa/cds/commits/main"><img alt="Last commit" src="https://img.shields.io/github/last-commit/shanewa/cds?style=flat-square&color=0ea5e9" /></a>&nbsp;
+    <a href="LICENSE"><img alt="MIT license" src="https://img.shields.io/github/license/shanewa/cds?style=flat-square&color=2dd4bf" /></a>&nbsp;
+    <img alt="bash or zsh" src="https://img.shields.io/badge/shell-bash%20%7C%20zsh-0f172a?style=flat-square" />
+  </p>
+  <br>
+  <img src="assets/cds-logo.png" alt="cds" width="50%"/>
+  <hr>
+  <br>
 </div>
 
 Deep paths get typed once and then forgotten. `cds` stores them as names, jumps straight there, and keeps working on Linux, WSL2, Cygwin, Git Bash, and macOS.
@@ -97,9 +109,3 @@ cds -w "C:\Program Files (x86)"
 - macOS, with zsh or bash
 
 No `gawk`. No bash 4 associative arrays. The same file sources on all of them.
-
-<div align="center">
-
-<img src="assets/cds-squre.png" alt="cds mark" width="180">
-
-</div>
