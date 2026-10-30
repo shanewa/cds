@@ -1,24 +1,36 @@
 #---------------------------------------------------------------------------
-#--- cds
-#---
-#--- Usage: The cds ("change directory savor") command is used to change 
-#---        the current working directory by using the DIRECTORY ALIAS
-#---        when working on the Linux terminal in Linux and other Unix-like
-#---        operating systems and even Windows implemented by the pure Shell.
-#---
-#--- Info: ATTENTION: Add this line in your .profile: alias cds=". ~/bin/cds"
+# cds - change directory by alias.
+#
+# Source it from bash 3.2+ or zsh (do not execute it):
+#   alias cds=". /path/to/cds"
+#
+# Works in interactive shells on:
+#   GNU/Linux (Ubuntu, Debian, Red Hat, and other distros)
+#   WSL2, Cygwin, MSYS2, Git Bash
+#   macOS
+#
+# Windows drive paths are converted with wslpath, cygpath, or CDS_LINUX_MOUNT.
 #---------------------------------------------------------------------------
 
+if [[ -z "${BASH_VERSION:-}" && -z "${ZSH_VERSION:-}" ]]; then
+    printf '%s\n' "cds: source this file from bash 3.2+ or zsh." >&2
+    return 1 2>/dev/null || exit 1
+fi
+
 # Use 'export CDS_CNFG=your_cnfg' to overwrite the default.
-[[ -z ${CDS_CNFG} ]] && CDS_CNFG=${HOME}/.cds.cnfg
+if [[ -z "${CDS_CNFG:-}" ]]; then
+    CDS_CNFG="${HOME}/.cds.cnfg"
+fi
 
-if [[ "${cds_init_flag}" != "yes" ]]; then {
+if [[ "${cds_init_flag:-}" != "yes" ]]; then
 
-# The change history infomation of cds
+# The change history of cds
 CDS_CHANGE_HISTORY="
 #########################################################################
 Change History:
 
+Version  7: 2026/10/30 Run on bash 3.2+ and zsh without gawk.
+                       Auto-detect WSL2, Cygwin, and MSYS/Git Bash mounts.
 Version  6: 2021/07/06 Refactor code.
                        Remove the company specific information.
 Version  5: 2019/03/22 Support Windows style directory.
@@ -29,14 +41,14 @@ Version  1: 2016/07/15 Develop this tool for CPRS testing.
 #########################################################################
 "
 
-# Usage section
 CDS_GENERAL_USAGE="
 USAGE:
-    cds [ --help|-h ] [ <alias> ] [ -<n> ] 
+    cds [ --help|-h ] [ <alias> ] [ -<n> ]
         [ --go|-g ] [ --last|-l ] [ --first|-f ] [-w|--win <win_path>]
         [ --add|-a <alias> ] [ --delete|-d <alias> ] [ --path|-p <path> ]
         [ --show|-s ]
 "
+
 CDS_EXTENDED_USAGE="
     --help, -h  : Displays command usage, description and examples.
 
@@ -44,13 +56,14 @@ CDS_EXTENDED_USAGE="
 
     -<n>        : Change dir to the <n>th folder/file in current directory.
 
-    --go, -g    : Recursively cd into the folder until no more folders in current dir.
+    --go, -g    : Recursively cd into the only subdirectory until a directory
+                  has zero or several subdirectories.
 
     --last, -l  : cd into the last folder/file in current directory.
 
     --first, -f : cd into the first folder/file in current directory.
 
-    --win, -w <win_path>  : cd into a windowns style path.
+    --win, -w <win_path>  : cd into a Windows path (C:\\... or C:/...).
 
     --add|-a <alias> --path|-p <path>: Add a new directory alias for path.
 
@@ -61,28 +74,25 @@ CDS_EXTENDED_USAGE="
 
 CDS_EXAMPLES_USAGE="
 DESCRIPTION:
-    The cds (\"change directory savor\") command is used to change 
-    the current working directory by using the DIRECTORY ALIAS
-    when working on the Linux terminal in Linux and other Unix-like
-    operating systems and even Windows implemented by the pure Shell.
-
-    Linux users often need to change to some deep directores over and over again.
-    Typing or remembering the same directory path again and again reduces your 
-    productivity and distracts you from what you are actually doing.
-
-    You can save yourself some time by creating directory aliases for your most 
-    used directories. Aliases are like custom shortcuts used to represent a directory.
+    The cds (\"change directory savor\") command changes the current directory
+    by DIRECTORY ALIAS. Source it from bash 3.2+ or zsh on GNU/Linux
+    (Ubuntu, Debian, Red Hat, and other distros), WSL2, Cygwin, MSYS2,
+    Git Bash, and macOS.
 
 CONFIGURATIONS:
-    The default config file is ${HOME}/.cds.cnfg.
+    The default config file is \${HOME}/.cds.cnfg.
     Use 'export CDS_CNFG=your_cnfg' to overwrite the default.
-    
-    Must add this line in your .profile or .bash_profile:
+
+    Add this line to the shell startup file (.bashrc or .zshrc):
     alias cds=\". your_local_cds_tool_path/cds\"
 
-    If you use Cygwin or Windows Ubuntu, set the Linux mount base in profile file:
-    export CDS_LINUX_MOUNT=/mnt
-    So, \"C:\Program Files (x86)\" will be converted to \"/mnt/c/Program Files (x86)\".
+    Windows drive letters are converted automatically:
+      WSL2             wslpath     /mnt/c/Program Files
+      Cygwin           cygpath     /cygdrive/c/Program Files
+      MSYS2 / Git Bash cygpath     /c/Program Files
+    Set CDS_LINUX_MOUNT only when the mount prefix is custom
+    (WSL automount root, a non-default Cygwin prefix, and so on).
+    Example: export CDS_LINUX_MOUNT=/mnt
 
 EXAMPLES:
     cds
@@ -95,202 +105,353 @@ EXAMPLES:
         -  e.g. ls => file1, folder2, folder3. Then, it means 'cd folder3'.
 
     cds -g
-        - e.g. ./folder1/folder2/foler3/. Then it means 'cd ./folder1/folder2/foler3/'.
+        - e.g. ./folder1/folder2/folder3/ with one subdirectory at each level.
+          Then it means 'cd ./folder1/folder2/folder3/'.
 
     cds -a test -p
         - Add a new alias 'test' for the current path \${PWD}.
-    
+
     cds -a test2 -p /home/my/test/
         - Add a new alias 'test2' for /home/my/test/.
-    
+
     cds -d test2
         - Remove alias 'test2'.
-    
+
     cds -s
-        - Show exsiting alaises.
-    
-    cds -w \"C:\Program Files (x86)\"
-        - cd \"/mnt/c/Program Files (x86)\".
+        - Show existing aliases.
+
+    cds -w \"C:\\Program Files (x86)\"
+        - cd the POSIX path for that Windows directory.
 "
 
-if [[ -z ${CDS_LS} ]]; then {
-   CDS_LS=$(alias ls 2>/dev/null | cut -d"'" -f2 | cut -d" " -f1)
-   [[ -z ${CDS_LS} ]] && CDS_LS=ls
+cds_trim() {
+    local value="$1"
+    value="${value#"${value%%[![:space:]]*}"}"
+    value="${value%"${value##*[![:space:]]}"}"
+    value="${value#\"}"
+    value="${value%\"}"
+    printf '%s' "$value"
 }
-fi
 
-function cds_load_cnfg() {
-    typeset cds_tmp_key
-    typeset cds_tmp_value
-    typeset cds_tmp_line
-    if [[ "${cds_init_flag}" != "yes" ]]; then {
-        for cds_tmp_line in $(cat ${CDS_CNFG} 2>/dev/null); do {
-            cds_tmp_key=$(echo ${cds_tmp_line} | cut -d: -f1)
-            cds_tmp_value=$(echo ${cds_tmp_line} | cut -d: -f2)
-            cds_configurations["${cds_tmp_key}"]="${cds_tmp_value}"
-        }
-        done 
-        cds_init_flag="yes"
-    }
+cds_detect_platform() {
+    local uname_s="" version=""
+    uname_s=$(uname -s 2>/dev/null || printf '%s' "unknown")
+    version=""
+    if [[ -r /proc/version ]]; then
+        version=$(cat /proc/version 2>/dev/null || true)
+    fi
+    if [[ -n "${WSL_DISTRO_NAME:-}" || -n "${WSL_INTEROP:-}" || "$version" == *[Mm]icrosoft* ]]; then
+        CDS_PLATFORM="wsl"
+    elif [[ "${OSTYPE:-}" == cygwin* || "$uname_s" == CYGWIN* ]]; then
+        CDS_PLATFORM="cygwin"
+    elif [[ "${OSTYPE:-}" == msys* || "${OSTYPE:-}" == mingw* || "$uname_s" == MINGW* || "$uname_s" == MSYS* ]]; then
+        CDS_PLATFORM="msys"
+    elif [[ "${OSTYPE:-}" == darwin* || "$uname_s" == Darwin ]]; then
+        CDS_PLATFORM="macos"
+    elif [[ "$uname_s" == Linux ]]; then
+        CDS_PLATFORM="linux"
+    else
+        CDS_PLATFORM="unix"
     fi
 }
 
-function cds_add_alias() {
-    # If --path is not provided, use the current path.
-    [[ -z ${cds_new_path} ]] && cds_new_path=${PWD}
-    # Use ${ROOT} instead of the absolute path
-    if [[ "${ROOT}" != "" && "${cds_new_path}" == ${ROOT}* ]]; then {
-        cds_new_path="\${ROOT}$(echo ${cds_new_path} | gawk -F"${ROOT}" '{print $2}')"
-    }
+# Prints the Windows drive mount prefix. An empty prefix means /c/... (MSYS).
+cds_mount_prefix() {
+    local line="" section="" key="" root=""
+    if [[ -n "${CDS_LINUX_MOUNT+x}" ]]; then
+        printf '%s' "$CDS_LINUX_MOUNT"
+        return 0
     fi
-    # Save
-    cat ${CDS_CNFG} 2>/dev/null | grep -v "^${cds_new_alias}:" > ${CDS_CNFG}.journal
-    echo "${cds_new_alias}:${cds_new_path}" >> ${CDS_CNFG}.journal
-    mv ${CDS_CNFG}.journal ${CDS_CNFG}
-    # Sync
-    cds_init_flag="no"
-    cds_load_cnfg
+    case "${CDS_PLATFORM:-unix}" in
+        cygwin)
+            printf '%s' "/cygdrive"
+            ;;
+        msys)
+            printf '%s' ""
+            ;;
+        wsl)
+            root=""
+            if [[ -r /etc/wsl.conf ]]; then
+                while IFS= read -r line || [[ -n "$line" ]]; do
+                    line="${line%$'\r'}"
+                    line=$(cds_trim "$line")
+                    [[ -z "$line" || "$line" == '#'* || "$line" == ';'* ]] && continue
+                    if [[ "$line" == '['*']' ]]; then
+                        section="$line"
+                        continue
+                    fi
+                    if [[ "$section" == "[automount]" ]]; then
+                        key=$(cds_trim "${line%%=*}")
+                        if [[ "$key" == "root" ]]; then
+                            root=$(cds_trim "${line#*=}")
+                            break
+                        fi
+                    fi
+                done < /etc/wsl.conf
+            fi
+            printf '%s' "${root:-/mnt}"
+            ;;
+        *)
+            printf '%s' "/mnt"
+            ;;
+    esac
 }
 
-function cds_delete_alias() {
-    typeset alias2remove="$1"
-    # Remove alias from cnfg file
-    cat ${CDS_CNFG} 2>/dev/null | grep -v "^${alias2remove}:" > ${CDS_CNFG}.journal
-    mv ${CDS_CNFG}.journal ${CDS_CNFG}
-    # Sync
-    cds_init_flag="no"
-    cds_load_cnfg
+cds_win_to_posix_manual() {
+    local win="$1" mount="" drive="" rest=""
+    win=${win//\\//}
+    case "$win" in
+        [A-Za-z]:*)
+            drive=$(printf '%.1s' "$win" | tr '[:upper:]' '[:lower:]')
+            rest=$(printf '%s' "$win" | cut -c3-)
+            ;;
+        *)
+            printf '%s' "$win"
+            return 0
+            ;;
+    esac
+    case "$rest" in
+        /*) ;;
+        "") ;;
+        *) rest="/${rest}" ;;
+    esac
+    mount=$(cds_mount_prefix)
+    if [[ -n "$mount" ]]; then
+        printf '%s/%s%s' "$mount" "$drive" "$rest"
+    else
+        printf '/%s%s' "$drive" "$rest"
+    fi
 }
 
-function cds_show_all() {
-    gawk '{
-        split($0, tmp, ":")        
-        printf "%10s\t%s\n", tmp[1], tmp[2]
-    }' ${CDS_CNFG} 2>/dev/null
-}
-
-function cds_cd_alias() {
-    typeset myalias="$1"
-    typeset mypath="${cds_configurations[${myalias}]}"
-    if [[ ! -z ${mypath} ]]; then {
-        if [[ "${mypath}" == "\${ROOT}"* ]]; then {
-            typeset relative_path=$(echo "${mypath}" | gawk '{gsub(/\${ROOT}/, ""); print $0}')
-            mypath="$(cd ${ROOT} && pwd)${relative_path}"
-        }
+cds_win_to_posix() {
+    local win="$1" converted=""
+    if [[ -z "$win" ]]; then
+        return 1
+    fi
+    # An explicit mount prefix wins over wslpath and cygpath.
+    if [[ -z "${CDS_LINUX_MOUNT+x}" ]]; then
+        if command -v wslpath >/dev/null 2>&1; then
+            converted=$(wslpath -u "$win" 2>/dev/null) && [[ -n "$converted" ]] && {
+                printf '%s' "$converted"
+                return 0
+            }
         fi
-        cd "${mypath}"
-    }
+        if command -v cygpath >/dev/null 2>&1; then
+            converted=$(cygpath -u "$win" 2>/dev/null) && [[ -n "$converted" ]] && {
+                printf '%s' "$converted"
+                return 0
+            }
+        fi
+    fi
+    cds_win_to_posix_manual "$win"
+}
+
+cds_lookup_alias() {
+    local want="$1" line="" key=""
+    [[ -n "$want" && -f "$CDS_CNFG" ]] || return 1
+    while IFS= read -r line || [[ -n "$line" ]]; do
+        line="${line%$'\r'}"
+        [[ -z "$line" || "$line" == '#'* || "$line" != *:* ]] && continue
+        key="${line%%:*}"
+        if [[ "$key" == "$want" ]]; then
+            printf '%s' "${line#*:}"
+            return 0
+        fi
+    done < "$CDS_CNFG"
+    return 1
+}
+
+cds_expand_root() {
+    local path="$1" prefix='${ROOT}' rel="" root_abs=""
+    if [[ -n "${ROOT:-}" && -d "$ROOT" && "$path" == "$prefix"* ]]; then
+        rel="${path#"$prefix"}"
+        root_abs=$(builtin cd -- "$ROOT" && pwd) || return 1
+        printf '%s%s' "$root_abs" "$rel"
+    else
+        printf '%s' "$path"
     fi
 }
 
-function cds_go() {
-    typeset cds_d_num=1
-    typeset cds_d_name=""
-    while [[ ${cds_d_num} -eq 1 ]]; do { 
-        eval $(${CDS_LS} -l | gawk '{
-                if ($0 ~ /^d/) {
-                    cds_d_num++
-                    cds_d_name=$NF
-                }
-            } END {
-                printf("cds_d_num=%d; cds_d_name=%s", cds_d_num, cds_d_name)
-            }')
-        [[ ${cds_d_num} -eq 1 ]] && cd "${cds_d_name}"
-    }
+cds_rewrite_config() {
+    local drop="$1" append="$2" tmp="" line=""
+    tmp="${CDS_CNFG}.journal"
+    : > "$tmp"
+    if [[ -f "$CDS_CNFG" ]]; then
+        while IFS= read -r line || [[ -n "$line" ]]; do
+            line="${line%$'\r'}"
+            [[ "${line%%:*}" == "$drop" ]] && continue
+            printf '%s\n' "$line" >> "$tmp"
+        done < "$CDS_CNFG"
+    fi
+    if [[ -n "$append" ]]; then
+        printf '%s\n' "$append" >> "$tmp"
+    fi
+    mv "$tmp" "$CDS_CNFG"
+}
+
+cds_add_alias() {
+    local stored=""
+    if [[ -z "${cds_new_path:-}" ]]; then
+        cds_new_path=$PWD
+    fi
+    if [[ "$cds_new_alias" == *:* ]]; then
+        printf '%s\n' "cds: alias cannot contain ':'." >&2
+        return 1
+    fi
+    stored="$cds_new_path"
+    if [[ -n "${ROOT:-}" && "$ROOT" != "/" && "$cds_new_path" == "$ROOT"* ]]; then
+        stored="\${ROOT}${cds_new_path#"$ROOT"}"
+    fi
+    cds_rewrite_config "$cds_new_alias" "${cds_new_alias}:${stored}"
+}
+
+cds_delete_alias() {
+    local alias2remove="$1"
+    [[ -n "$alias2remove" ]] || return 1
+    cds_rewrite_config "$alias2remove" ""
+}
+
+cds_show_all() {
+    local line="" key="" val=""
+    [[ -f "$CDS_CNFG" ]] || return 0
+    while IFS= read -r line || [[ -n "$line" ]]; do
+        line="${line%$'\r'}"
+        [[ -z "$line" || "$line" == '#'* || "$line" != *:* ]] && continue
+        key="${line%%:*}"
+        val="${line#*:}"
+        printf '%10s\t%s\n' "$key" "$val"
+    done < "$CDS_CNFG"
+}
+
+cds_cd_alias() {
+    local myalias="$1" mypath=""
+    mypath=$(cds_lookup_alias "$myalias") || return 0
+    [[ -n "$mypath" ]] || return 0
+    mypath=$(cds_expand_root "$mypath") || return 1
+    builtin cd -- "$mypath"
+}
+
+cds_go() {
+    local count=0 name="" target="" before="" after=""
+    if [[ -n "${ZSH_VERSION:-}" ]]; then
+        setopt localoptions nullglob
+    else
+        cds_nullglob_restore=0
+        shopt -q nullglob || cds_nullglob_restore=1
+        shopt -s nullglob
+    fi
+    while true; do
+        count=0
+        target=""
+        for name in */; do
+            [[ -d "$name" ]] || continue
+            count=$((count + 1))
+            target="$name"
+            [[ "$count" -gt 1 ]] && break
+        done
+        [[ "$count" -eq 1 ]] || break
+        before=$(pwd)
+        builtin cd -- "${target%/}" || break
+        after=$(pwd)
+        [[ "$before" == "$after" ]] && break
     done
-    pwd && ${CDS_LS}
+    if [[ -z "${ZSH_VERSION:-}" && "${cds_nullglob_restore:-0}" -eq 1 ]]; then
+        shopt -u nullglob
+    fi
+    unset cds_nullglob_restore
+    pwd && command ls
 }
 
-function cds_path_windowns_2_linux() {
-    typeset win_path="$1"
-    echo "${win_path}" | tr '\' '\n' 2>/dev/null | \
-    gawk -v cds_linux_mount="${CDS_LINUX_MOUNT}" '{
-        if ($0 ~ /^[C-Z]:$/) {
-            split($0, tmp, ":")
-            disk=tolower(tmp[1])
-            linux_path=sprintf("%s/%s", cds_linux_mount, disk)
-        } else {
-            linux_path=sprintf("%s/%s", linux_path, $0)
-        }
-    } END {
-        print linux_path
-    }'
+cds_cd_from_ls() {
+    local spec="$1" target=""
+    target=$(CLICOLOR_FORCE= LS_COLORS= command ls -1 | sed -n "${spec}p")
+    [[ -n "$target" ]] || return 1
+    builtin cd -- "$target"
 }
 
-function cds_clear_vars() {
+cds_cd_win() {
+    local posix=""
+    posix=$(cds_win_to_posix "$1") || return 1
+    [[ -n "$posix" ]] || return 1
+    builtin cd -- "$posix"
+}
+
+cds_clear_vars() {
     cds_new_alias=""
     cds_new_path=""
 }
 
-}
 fi
 
 ######################## MAIN PROGRAM ###############################
+cds_detect_platform
+
 # If there's no input parameter, change to ${ROOT}.
-[[ $# -eq 0 ]] && [[ -d ${ROOT} ]] && cd "${ROOT}"
-if [[ ${#cds_configurations[@]} -eq 0 ]]; then {
-    unset cds_configurations
-    declare -A cds_configurations
-}
+if [[ $# -eq 0 && -n "${ROOT:-}" && -d "$ROOT" ]]; then
+    builtin cd -- "$ROOT"
 fi
-cds_load_cnfg
 cds_clear_vars
-# Handle the input parameters.
-while [[ $# -gt 0 ]]; do {
-    case ${1} in
-        # Directive options
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
         -h|--help)
-            echo "${CDS_GENERAL_USAGE}"
-            echo "${CDS_EXTENDED_USAGE}"
-            echo "${CDS_EXAMPLES_USAGE}"
+            printf '%s\n' "$CDS_GENERAL_USAGE"
+            printf '%s\n' "$CDS_EXTENDED_USAGE"
+            printf '%s\n' "$CDS_EXAMPLES_USAGE"
             return 2
-        ;;
+            ;;
         -v|--version)
-            echo "${CDS_CHANGE_HISTORY}"
+            printf '%s\n' "$CDS_CHANGE_HISTORY"
+            printf 'Platform: %s\n' "${CDS_PLATFORM:-unix}"
             return 2
-        ;;
+            ;;
         -s|--show)
             cds_show_all
-        ;;
+            ;;
         -g|--go)
             cds_go
-        ;;
+            ;;
         -l|--last)
-            cd "$(${CDS_LS} | sed -n '$p')"
-        ;;
+            cds_cd_from_ls '$'
+            ;;
         -f|--first)
-            cd "$(${CDS_LS} | head -1)"
-        ;;
+            cds_cd_from_ls '1'
+            ;;
         -d|--delete)
-            [[ $# -gt 0 ]] && shift
-            cds_delete_alias "$1"
-        ;;
+            if [[ $# -gt 1 ]]; then
+                shift
+                cds_delete_alias "$1"
+            fi
+            ;;
         -w|--win)
-            [[ $# -gt 0 ]] && shift
-            cd "$(cds_path_windowns_2_linux "$1")"
-        ;;
-        # Combined options
+            if [[ $# -gt 1 ]]; then
+                shift
+                cds_cd_win "$1"
+            fi
+            ;;
         -a|--add)
-            [[ $# -gt 0 ]] && shift
-            cds_new_alias="$1"
-        ;;
+            if [[ $# -gt 1 ]]; then
+                shift
+                cds_new_alias="$1"
+            fi
+            ;;
         -p|--path)
-            [[ $# -gt 0 ]] && shift
-            cds_new_path="$1"
-        ;;
-        # Change dir to the <n>th folder.
+            if [[ $# -gt 1 ]]; then
+                shift
+                cds_new_path="$1"
+            fi
+            ;;
         -[1-9]*)
-            [[ "$1" =~ ^-[1-9][0-9]*$ ]] && cd "$(${CDS_LS} | sed -n "$(echo ${1} | cut -d- -f2)p")"
-        ;;
-        # Change dir to alias
+            if [[ "$1" =~ ^-[1-9][0-9]*$ ]]; then
+                cds_cd_from_ls "${1#-}"
+            fi
+            ;;
         *)
             cds_cd_alias "$1"
-        ;;
+            ;;
     esac
-
-    # Next parameter
     [[ $# -gt 0 ]] && shift
-}
 done
 
-[[ ! -z ${cds_new_alias} ]] && cds_add_alias
+[[ -n "${cds_new_alias:-}" ]] && cds_add_alias
+cds_clear_vars

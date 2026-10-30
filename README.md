@@ -3,10 +3,15 @@
 </p>
 
 # cds
-The cds (\"change directory savor\") command is used to change 
-the current working directory by using the DIRECTORY ALIAS
-when working on the Linux terminal in Linux and other Unix-like
-operating systems and even Windows implemented by the pure Shell.
+The cds ("change directory savor") command changes the current directory
+by directory alias. Source it from bash 3.2+ or zsh.
+
+Supported environments:
+
+- GNU/Linux, including Ubuntu, Debian, Red Hat, and other distributions
+- Windows Subsystem for Linux 2 (WSL2)
+- Cygwin, MSYS2, and Git Bash
+- macOS (zsh or bash)
 
 Linux users often need to change to some deep directores over and over again.
 Typing or remembering the same directory path again and again reduces your 
@@ -19,12 +24,19 @@ used directories. Aliases are like custom shortcuts used to represent a director
 The default config file is ${HOME}/.cds.cnfg.
 Use 'export CDS_CNFG=your_cnfg' to overwrite the default.
 
-Must add this line in your .profile or .bash_profile:  
-`alias cds=\". your_local_cds_tool_path/cds\"`
+Source cds from the shell startup file (`.bashrc` on Linux, WSL2, Cygwin, and Git Bash; `.zshrc` on macOS):
 
-If you use Cygwin or Windows Ubuntu, set the Linux mount base in profile file:  
-`export CDS_LINUX_MOUNT=/mnt`
-So, \"C:\Program Files (x86)\" will be converted to \"/mnt/c/Program Files (x86)\".# 
+`alias cds=". your_local_cds_tool_path/cds"`
+
+`cds -w` converts a Windows path with `wslpath` (WSL2), `cygpath` (Cygwin, MSYS2, Git Bash), or a mount prefix:
+
+| Environment | Example result for `C:\Program Files` |
+| --- | --- |
+| WSL2 | `/mnt/c/Program Files` |
+| Cygwin | `/cygdrive/c/Program Files` |
+| MSYS2 / Git Bash | `/c/Program Files` |
+
+Set `CDS_LINUX_MOUNT` only when that prefix is different. WSL2 also reads the `automount.root` value in `/etc/wsl.conf` when `wslpath` is not available. 
 
 # General usage
 ```
@@ -45,7 +57,7 @@ So, \"C:\Program Files (x86)\" will be converted to \"/mnt/c/Program Files (x86)
 
     --first, -f : cd into the first folder/file in current directory.
 
-    --win, -w <win_path>  : cd into a windowns style path.
+    --win, -w <win_path>  : cd into a Windows path.
 
     --add|-a <alias> --path|-p <path>: Add a new directory alias for path.
 
@@ -78,6 +90,6 @@ So, \"C:\Program Files (x86)\" will be converted to \"/mnt/c/Program Files (x86)
     cds -s
         - Show exsiting alaises.
     
-    cds -w \"C:\Program Files (x86)\"
-        - cd \"/mnt/c/Program Files (x86)\"
+    cds -w "C:\Program Files (x86)"
+        - cd the POSIX path for that Windows directory.
 
