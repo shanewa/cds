@@ -18,6 +18,7 @@ function isBinary(path) {
 }
 
 const bad = [];
+const nonEnglish = [];
 for (const file of stagedFiles()) {
   if (isBinary(file)) continue;
   let content;
@@ -29,6 +30,9 @@ for (const file of stagedFiles()) {
   if (content.includes(0x0d)) {
     bad.push(file);
   }
+  if (/[\u4e00-\u9fff]/.test(content.toString("utf8"))) {
+    nonEnglish.push(file);
+  }
 }
 
 if (bad.length) {
@@ -37,5 +41,13 @@ if (bad.length) {
     console.error(`  ${file}`);
   }
   console.error("Fix with: git add --renormalize <paths>  (see .gitattributes)");
+  process.exit(1);
+}
+
+if (nonEnglish.length) {
+  console.error("pre-commit: repository text must be English.");
+  for (const file of nonEnglish) {
+    console.error(`  ${file}`);
+  }
   process.exit(1);
 }

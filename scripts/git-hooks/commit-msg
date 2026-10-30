@@ -15,3 +15,8 @@ if (/^Co-authored-by:/im.test(out)) {
   console.error("commit-msg hook: Co-authored-by is not allowed");
   process.exit(1);
 }
+
+if (/[\u4e00-\u9fff]/.test(out)) {
+  console.error("commit-msg hook: commit messages must be English");
+  process.exit(1);
+}

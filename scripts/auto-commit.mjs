@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
- * 工作区有改动时自动 git add + commit（供 Cursor hooks 调用，带防抖）。
- * 手动：node scripts/auto-commit.mjs --force
+ * Auto git add + commit when the worktree changes (Cursor hooks, debounced).
+ * Manual: node scripts/auto-commit.mjs --force
  */
 import { execSync, spawn, spawnSync } from "node:child_process";
 import { existsSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
@@ -45,11 +45,11 @@ function porcelainPaths() {
 
 function buildMessage(paths) {
   const unique = [...new Set(paths)].slice(0, 12);
-  const bullets = unique.map((p) => `- 更新 \`${p}\``);
+  const bullets = unique.map((p) => `- Update \`${p}\``);
   if (paths.length > unique.length) {
-    bullets.push(`- 另有 ${paths.length - unique.length} 个路径`);
+    bullets.push(`- ${paths.length - unique.length} more paths`);
   }
-  return `自动保存工作区改动\n\n${bullets.join("\n")}\n`;
+  return `Save workspace changes\n\n${bullets.join("\n")}\n`;
 }
 
 async function commitNow() {
