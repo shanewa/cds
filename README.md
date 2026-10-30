@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/cds-logo.png" alt="PanRelay logo" width="200">
+</p>
+
 # cds
 The cds (\"change directory savor\") command is used to change 
 the current working directory by using the DIRECTORY ALIAS
