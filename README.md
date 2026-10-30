@@ -1,95 +1,101 @@
-<p align="center">
-  <img src="assets/cds-logo.png" alt="PanRelay logo" width="200">
+<p>
+  <img src="https://img.shields.io/github/stars/shanewa/cds?style=flat-square&color=14b8a6" alt="GitHub stars" />
+  <img src="https://img.shields.io/github/last-commit/shanewa/cds?style=flat-square&color=0ea5e9" alt="Last commit" />
+  <img src="https://img.shields.io/github/license/shanewa/cds?style=flat-square&color=2dd4bf" alt="MIT license" />
+  <img src="https://img.shields.io/badge/shell-bash%20%7C%20zsh-0f172a?style=flat-square" alt="bash or zsh" />
 </p>
 
+<div align="center">
+
+<img src="assets/cds-logo.png" alt="cds" width="420">
+
 # cds
-The cds ("change directory savor") command changes the current directory
-by directory alias. Source it from bash 3.2+ or zsh.
 
-Supported environments:
+**Change directory. Savor the shortcut.**
 
-- GNU/Linux, including Ubuntu, Debian, Red Hat, and other distributions
-- Windows Subsystem for Linux 2 (WSL2)
-- Cygwin, MSYS2, and Git Bash
-- macOS (zsh or bash)
+One alias for the folders you open every day. Pure shell. No daemon.
 
-Linux users often need to change to some deep directores over and over again.
-Typing or remembering the same directory path again and again reduces your 
-productivity and distracts you from what you are actually doing.
+</div>
 
-You can save yourself some time by creating directory aliases for your most 
-used directories. Aliases are like custom shortcuts used to represent a directory.
+Deep paths get typed once and then forgotten. `cds` stores them as names, jumps straight there, and keeps working on Linux, WSL2, Cygwin, Git Bash, and macOS.
 
-# Configurations
-The default config file is ${HOME}/.cds.cnfg.
-Use 'export CDS_CNFG=your_cnfg' to overwrite the default.
+## Drop in
 
-Source cds from the shell startup file (`.bashrc` on Linux, WSL2, Cygwin, and Git Bash; `.zshrc` on macOS):
+Source it. Do not execute it. `cd` has to happen in the shell you are already using.
 
-`alias cds=". your_local_cds_tool_path/src/cds"`
+```bash
+# ~/.bashrc on Linux, WSL2, Cygwin, and Git Bash
+# ~/.zshrc on macOS
+alias cds=". /path/to/cds/src/cds"
+```
 
-`cds -w` converts a Windows path with `wslpath` (WSL2), `cygpath` (Cygwin, MSYS2, Git Bash), or a mount prefix:
+Requires bash 3.2+ or zsh.
 
-| Environment | Example result for `C:\Program Files` |
+```text
+cds work          # jump to a saved alias
+cds -a work -p    # save the current directory as work
+cds -g            # walk the only subdirectory until the path forks
+cds -w 'C:\src'   # land on the POSIX path for that Windows folder
+```
+
+## Commands
+
+```text
+cds [ --help|-h ] [ <alias> ] [ -<n> ]
+    [ --go|-g ] [ --last|-l ] [ --first|-f ] [ --win|-w <win_path> ]
+    [ --add|-a <alias> ] [ --path|-p <path> ]
+    [ --delete|-d <alias> ] [ --show|-s ]
+```
+
+| Command | What it does |
 | --- | --- |
-| WSL2 | `/mnt/c/Program Files` |
-| Cygwin | `/cygdrive/c/Program Files` |
-| MSYS2 / Git Bash | `/c/Program Files` |
+| `cds` | `cd` to `$ROOT` when that directory exists |
+| `cds <alias>` | `cd` to the path saved under that name |
+| `cds -a <alias> -p [path]` | Save an alias. Omit the path to use `$PWD` |
+| `cds -d <alias>` | Delete an alias |
+| `cds -s` | List every alias |
+| `cds -n` | `cd` to the nth entry from `ls` |
+| `cds -f` / `cds -l` | `cd` to the first or last entry from `ls` |
+| `cds -g` | Keep entering the only subdirectory until there are zero or several |
+| `cds -w <win_path>` | `cd` to a Windows path (`C:\...` or `C:/...`) |
+| `cds -h` / `cds -v` | Help, or the version history |
 
-Set `CDS_LINUX_MOUNT` only when that prefix is different. WSL2 also reads the `automount.root` value in `/etc/wsl.conf` when `wslpath` is not available. 
+Aliases live in `~/.cds.cnfg` as `name:path`. Override the file with `CDS_CNFG`.
 
-# General usage
+```bash
+export CDS_CNFG="$HOME/dotfiles/cds.cnfg"
 ```
-    cds [ --help|-h ] [ <alias> ] [ -<n> ] 
-        [ --go|-g ] [ --last|-l ] [ --first|-f ] [-w|--win <win_path>]
-        [ --add|-a <alias> ] [ --delete|-d <alias> ] [ --path|-p <path> ]
-        [ --show|-s ]
+
+A path under `$ROOT` is stored as `${ROOT}/...` and expanded again when you jump.
+
+## Windows paths
+
+`cds -w` picks the converter for the shell you are in. Set `CDS_LINUX_MOUNT` only when the prefix is not the default.
+
+| Shell | `C:\Program Files` becomes |
+| --- | --- |
+| WSL2 | `/mnt/c/Program Files` via `wslpath` |
+| Cygwin | `/cygdrive/c/Program Files` via `cygpath` |
+| MSYS2 / Git Bash | `/c/Program Files` via `cygpath` |
+
+WSL2 falls back to `automount.root` in `/etc/wsl.conf` when `wslpath` is missing.
+
+```bash
+export CDS_LINUX_MOUNT=/mnt
+cds -w "C:\Program Files (x86)"
 ```
-    --help, -h  : Displays command usage, description and examples.
 
-    <alias>     : Change dir to the path represented by this alias.
+## Where it runs
 
-    -<n>        : Change dir to the <n>th folder/file in current directory.
+- GNU/Linux, including Ubuntu, Debian, and Red Hat
+- WSL2
+- Cygwin, MSYS2, and Git Bash
+- macOS, with zsh or bash
 
-    --go, -g    : Recursively cd into the folder until no more folders in current dir.
+No `gawk`. No bash 4 associative arrays. The same file sources on all of them.
 
-    --last, -l  : cd into the last folder/file in current directory.
+<div align="center">
 
-    --first, -f : cd into the first folder/file in current directory.
+<img src="assets/cds-squre.png" alt="cds mark" width="180">
 
-    --win, -w <win_path>  : cd into a Windows path.
-
-    --add|-a <alias> --path|-p <path>: Add a new directory alias for path.
-
-    --delete, -d <alias> : Remove an existing directory alias.
-
-    --show, -s  : Show all directory aliases.
-
-# Examples
-    cds
-        -  cd \${ROOT}
-
-    cds --help, cds -h
-        - Print the help message
-
-    cds -3
-        -  e.g. ls => file1, folder2, folder3. Then, it means 'cd folder3'
-
-    cds -g
-        - e.g. ./folder1/folder2/foler3/. Then it means 'cd ./folder1/folder2/foler3/'.
-
-    cds -a test -p
-        - Add a new alias 'test' for the current path \${PWD}.
-    
-    cds -a test2 -p /home/my/test/
-        - Add a new alias 'test2' for /home/my/test/.
-    
-    cds -d test2
-        - Remove alias 'test2'
-    
-    cds -s
-        - Show exsiting alaises.
-    
-    cds -w "C:\Program Files (x86)"
-        - cd the POSIX path for that Windows directory.
-
+</div>
