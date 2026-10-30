@@ -19,6 +19,10 @@ One alias for the folders you open every day. Pure shell. No daemon.
 
 Deep paths get typed once and then forgotten. `cds` stores them as names, jumps straight there, and keeps working on Linux, WSL2, Cygwin, Git Bash, and macOS.
 
+## Why the name
+
+`cds` is typed with the left hand alone. On a QWERTY keyboard, `c`, `d`, and `s` sit close together on the left side, and `d` and `s` are on the home row. Your fingers barely leave their resting position, so the command goes out fast, one-handed, and without a reach. Each keystroke is a short, comfortable move.
+
 ## Drop in
 
 Source it. Do not execute it. `cd` has to happen in the shell you are already using.
