@@ -3,16 +3,19 @@
 # to the shell startup file. Safe to run more than once.
 #
 #   curl -fsSL https://raw.githubusercontent.com/shanewa/cds/main/install.sh | sh
+#   curl -fsSL https://gitee.com/shanewa/cds/raw/main/install.sh | sh   (mainland China)
 #
 # Overrides:
 #   CDS_HOME      install directory          (default: $HOME/.local/share/cds)
-#   CDS_RAW_BASE  where src/cds is fetched   (default: GitHub raw, main branch)
+#   CDS_RAW_BASE  use only this source       (default: GitHub, then Gitee mirror)
 
 set -eu
 
-RAW_BASE="${CDS_RAW_BASE:-https://raw.githubusercontent.com/shanewa/cds/main}"
 CDS_HOME="${CDS_HOME:-$HOME/.local/share/cds}"
 target="$CDS_HOME/cds"
+
+# Sources are tried in order; the first one that answers wins.
+RAW_BASES="${CDS_RAW_BASE:-https://raw.githubusercontent.com/shanewa/cds/main https://gitee.com/shanewa/cds/raw/main}"
 
 die() {
     printf 'install.sh: %s\n' "$*" >&2
@@ -23,10 +26,19 @@ command -v curl >/dev/null 2>&1 || die "curl is required"
 
 mkdir -p "$CDS_HOME"
 tmp="$target.tmp.$$"
-if ! curl -fsSL "$RAW_BASE/src/cds" -o "$tmp"; then
+fetched=""
+for base in $RAW_BASES; do
+    if curl -fsSL --connect-timeout 10 --max-time 120 "$base/src/cds" -o "$tmp" 2>/dev/null; then
+        fetched="$base"
+        break
+    fi
+    printf 'install.sh: could not fetch from %s, trying next source\n' "$base" >&2
+done
+if [ -z "$fetched" ]; then
     rm -f "$tmp"
-    die "download failed: $RAW_BASE/src/cds"
+    die "download failed from all sources: $RAW_BASES"
 fi
+printf 'Fetched cds from %s\n' "$fetched"
 # cds is sourced, never executed, so it does not need the execute bit.
 chmod 644 "$tmp"
 mv "$tmp" "$target"

@@ -1,14 +1,16 @@
 <div align="center">
-  <h1>cds</h1>
 
   <p align="center">
     <img src="assets/cds-logo.png" alt="cds" width="50%"/><br>
+    <h1>cds</h1>
     <i>Change directory. Savor the shortcut.</i>
     <br>
   </p>
 
   <p align="center">
     <a href="src/cds">Source</a>
+    ·
+    <a href="https://gitee.com/shanewa/cds">Gitee Mirror</a>
     ·
     <a href="https://github.com/shanewa/cds/issues">Submit an Issue</a>
     ·
@@ -41,6 +43,12 @@ Works with bash 3.2+ or zsh on Linux, WSL2, Cygwin, Git Bash, and macOS.
 curl -fsSL https://raw.githubusercontent.com/shanewa/cds/main/install.sh | sh
 ```
 
+In mainland China, use the Gitee mirror. The installer also tries Gitee on its own when GitHub is unreachable.
+
+```bash
+curl -fsSL https://gitee.com/shanewa/cds/raw/main/install.sh | sh
+```
+
 Prefer to read the script before running it:
 
 ```bash
@@ -48,6 +56,8 @@ curl -fsSL -o install.sh https://raw.githubusercontent.com/shanewa/cds/main/inst
 less install.sh
 sh install.sh
 ```
+
+Set `CDS_RAW_BASE` to fetch from one source only, for example `CDS_RAW_BASE=https://gitee.com/shanewa/cds/raw/main sh install.sh`.
 
 The installer saves `cds` to `~/.local/share/cds/cds` and adds one `alias cds=...` line to `~/.bashrc`, `~/.bash_profile` (macOS bash), or `~/.zshrc`. Run it again to update `cds`. The alias is not added twice.
 
