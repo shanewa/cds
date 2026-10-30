@@ -2,7 +2,7 @@
   <h1>cds</h1>
 
   <p align="center">
-    <img src="assets/cds-logo.png" alt="cds" width="200"><br>
+    <img src="assets/cds-logo.png" alt="cds" width="50%"/><br>
     <i>Change directory. Savor the shortcut.</i>
     <br>
   </p>
@@ -23,8 +23,6 @@
     <a href="LICENSE"><img alt="MIT license" src="https://img.shields.io/github/license/shanewa/cds?style=flat-square&color=2dd4bf" /></a>&nbsp;
     <img alt="bash or zsh" src="https://img.shields.io/badge/shell-bash%20%7C%20zsh-0f172a?style=flat-square" />
   </p>
-  <br>
-  <img src="assets/cds-logo.png" alt="cds" width="50%"/>
   <hr>
   <br>
 </div>
