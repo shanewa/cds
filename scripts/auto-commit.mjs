@@ -33,10 +33,12 @@ function run(cmd) {
 }
 
 function porcelainPaths() {
-  const out = run("git status --porcelain").trim();
-  if (!out) return [];
+  const out = run("git status --porcelain");
+  if (!out.trim()) return [];
   return out
     .split("\n")
+    .map((line) => line.replace(/\r$/, ""))
+    .filter((line) => line.length >= 4)
     .map((line) => line.slice(3).trim().replace(/^"(.+)"$/, "$1"))
     .filter((path) => path && !SKIP_PREFIXES.some((p) => path === p || path.startsWith(p)));
 }
